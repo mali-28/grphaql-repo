@@ -1,1 +1,0 @@
-export const MONGODB_URI = "mongodb+srv://alihadees786:alihadees786@cluster0.eds42qs.mongodb.net/?retryWrites=true&w=majority"
