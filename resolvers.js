@@ -1,28 +1,47 @@
-import { users, quotes } from "./db.js";
+const mongoose = require("mongoose");
+const { users, quotes } = require("./db");
+const bcrypt  = require("bcryptjs");
+const User  = require("./model/User");
+const jwt  = require("jsonwebtoken");
+const { JWT_SECRET } = require("./config");
+
 const resolvers = {
     Query: {
       greet: () => "Hello world",
       users: () => users,
-      user: (_,{id}) => users.find((currUser=> currUser.id === id)),
+      user: (_,{_id}) => users.find((currUser=> currUser._id === _id)),
       quotes: () => quotes
     },
     // parent -->  in this case User
     User: {
-      quotes: (parent) => quotes.filter((elem) => elem.by == parent.id)
+      quotes: (parent) => quotes.filter((elem) => elem.by == parent._id)
     },
     Mutation: {
-      createUser: (_, { firstName, lastName, email, password }) => {
-            const id = email + Math.ceil(Math.random()*2*Math.random())
-            users.push({
-                id,
-                firstName,
-                lastName,
-                email,
-                password
-            })
-            return users.find((user)=> user.id == id)
+      createUser: async (_, {newUser} ) => {
+        const user = await User.findOne({ email: newUser.email })
+        if (user) {
+          throw new Error("User already exists with that email")
         }
+        const hashedPassword = await bcrypt.hash(newUser.password, 12)
+        const createUser = new  User({
+          ...newUser, password: hashedPassword
+        })
+        return await createUser.save()
+      },
+
+      loginUser: async (_, { LoginInput }) => {
+        const user = await User.findOne({ email: LoginInput.email })
+        if (!user) {
+          throw new Error("User doesnot exists")
+        }
+        const isPassswordMatch = await bcrypt.compare(LoginInput.password, user.password)
+        if (!isPassswordMatch) throw new Error("Email or password invalid")
+        
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET)
+        return {token}
+
+      }
     }
 }
 
-export default resolvers;
+module.exports = resolvers;
