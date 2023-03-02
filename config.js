@@ -1,0 +1,1 @@
+ exports.MONGODB_URI = MonGODB_URL
