@@ -1,2 +1,2 @@
-exports.MONGODB_URI = MONGODB_URL
-exports.JWT_SECRET = anyString_you_want
+exports.MONGODB_URI = MongoDb_URI
+exports.JWT_SECRET = "any string you want"
