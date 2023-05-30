@@ -3,7 +3,8 @@ const  { ApolloServerPluginLandingPageGraphQLPlayground } =  require("apollo-ser
 const resolvers =  require("./resolvers");
 const typeDefs = require("./schema");
 const mongoose  = require("mongoose");
-const { MONGODB_URI } = require("./config");
+const { MONGODB_URI, JWT_SECRET } = require("./config");
+const jwt = require("jsonwebtoken");
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -19,6 +20,13 @@ mongoose.connection.on("error", (err) => {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  context: ({ req }) => {
+    const { authorization } = req.headers
+    if (authorization) {
+      const { userId } = jwt.verify(authorization, JWT_SECRET)
+      return {userId}
+    }
+  },
   plugins: [
     // ApolloServerPluginLandingPageGraphQLPlayground()
   ]
